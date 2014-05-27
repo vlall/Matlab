@@ -26,6 +26,15 @@ while 1
         break;
     end
 end 
- 
 
-  
+if button1
+    if choice == image
+        %write to text file "Answer #x is correct
+    else
+        %write to text file *Answer #x is incorrect
+    screenImage + 1 = image; 
+    
+elseif button2
+elseif button3
+elseif button4
+ 
