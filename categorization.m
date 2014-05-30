@@ -1,5 +1,4 @@
 % Categoization script Draft
-tic
 global rootDir
 rootDir = pwd;
 
@@ -7,9 +6,10 @@ fprintf ( 1, '\n' );
 fprintf ('Script active\n' );
 
 %% Control Panel
-fprintf('Looking for stimuli...\n')
+fprintf('Looking for stimuli...\n');
 if exist('sceneStim.mat')
-    load sceneStim.mat
+    load sceneStim.mat;
+    load mask.mat;
     fprintf('Stimuli loaded!\n');
 else
     disp('Please run makeStims first.');
@@ -25,12 +25,14 @@ butOne = KbName('1');
 butTwo = KbName('2');
 butThree = KbName('9');
 butFour = KbName('0');
- 
 
-%Timing Variables
-fixTime = 2000;
-imageTime = 128;
-maskTime = 500;
+%View Variables
+screens = Screen('Screens');
+screenNumber = min(screens);
+screenWidth = 412.75;
+viewingDistance = 920.75;
+visualAngle = 8;
+
 %Answer Variables
 correct=0;
 incorrect=0;
@@ -314,24 +316,41 @@ screenid = max(Screen('Screens'));
 [win, winRect] = Screen('OpenWindow', screenid, backgroundcolor);
 Screen(win,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
+Screen('Preference', 'SkipSyncTests', 2);
 Screen('TextSize',win, 35);
 Screen('TextStyle', win, 1);
 DrawFormattedText(win, 'Press Space to Start Scene Categorization', 'center', 'center', 0);
 Screen('Flip', win);
-%% response collection
 
-%Big loop for the program
+%% PTB Setup
+Screen('Preference', 'SkipSyncTests', 2);
+[w rect xMid yMid] = startPTB(screenNumber, 1, [128 128 128]);
+HideCursor;
+
+%Timing Variables
+fixTime = 2.0;
+imageTime = .128;
+maskTime = .5;
+
 for i = 1:256
+    % Fixate for w time
+    tic
+    fixate(w);
+    WaitSecs(fixTime-toc);
+    
     % Load image up by index # from design matrix, display it here for 128(stimTime) ms
     imageNum = design(i,2);
     category = design(i,3);
+    tic;
     load (category, 'image_000' + imageNum + '.jpg');
+    WaitSecs(imageTime - toc);
     
     % Load mask up from random number between 1:8 and display it here for
     maskNum = rand(1,8);
     folderNum = 1;
+    tic;
     load (folderNum, 'image_000' + maskNum + '.jpg');
+    WaitSecs(maskTime - toc);
 
     % 500(maskTime) ms.
     % Display Text: "What Image did you see?" 
@@ -349,6 +368,7 @@ for i = 1:256
         choice = 3;
     elseif keyIsDown == butFour
         choice = 4;
+    end;
         
     if choice == category
         save (fprintf('Trial # %s \n Image Number:%s\n Subject Guess:%s\n Image Category:%s\n Answer is Correct!\n', i, imageNum, choice, category))
@@ -359,7 +379,20 @@ for i = 1:256
         incorrect=incorrect+1;
 
     % Log array to text file, along with answer information.
-        save (fprintf('Correct:%s Incorrect:%s', correct,incorrect));
+        save (fprintf('Correct:%d\n Incorrect:%d\n Elapsed Time:%d', correct,incorrect, endTIme));
+    end;
+end;    
+    % Quit
     
-    % Quit.
-  
+%% Shutdown Procedures
+ShowCursor;
+Screen('CloseAll');
+
+
+%% Sam's Functions
+
+function fixate(w)
+Screen('TextSize', w, 40);
+DrawFormattedText(w, '+', 'center', 'center', [200 200 200]);
+Screen('TextSize', w, 25);
+Screen('Flip', w);
