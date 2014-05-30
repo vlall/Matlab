@@ -1,8 +1,6 @@
 % Categoization script Draft
 global rootDir
 rootDir = pwd;
-
-fprintf ( 1, '\n' );
 fprintf ('Script active\n' );
 
 %% Control Panel
@@ -327,8 +325,8 @@ Screen('Preference', 'SkipSyncTests', 2);
 [w rect xMid yMid] = startPTB(screenNumber, 1, [128 128 128]);
 HideCursor;
 %% Create Stimuli & Preallocate
-for set = 1:numStimSets
-    for img = 1:imgsPerSet
+for set = 1:4
+    for img = 1:64
         %Making the cell array
         tex{set}{img} = Screen('MakeTexture', w, STIMS{set}{img});
     end;
