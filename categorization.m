@@ -326,6 +326,19 @@ Screen('Flip', win);
 Screen('Preference', 'SkipSyncTests', 2);
 [w rect xMid yMid] = startPTB(screenNumber, 1, [128 128 128]);
 HideCursor;
+%% Create Stimuli & Preallocate
+for set = 1:numStimSets
+    for img = 1:imgsPerSet
+        %Making the cell array
+        tex{set}{img} = Screen('MakeTexture', w, STIMS{set}{img});
+    end;
+end;
+
+DrawFormattedText(w, 'Waiting for trigger...', 'center', 'center');
+Screen('DrawText', w, ['NUMBER OF VOLUMES :: ' num2str(numberOfVolumes)], 10, 15*rect(4)/16, rect(3));
+Screen('Flip', w);
+trigger(triggerKey);
+Screen('Flip', w);
 
 %Timing Variables
 fixTime = 2.0;
@@ -342,17 +355,21 @@ for i = 1:256
     imageNum = design(i,2);
     category = design(i,3);
     tic;
-    load (category, 'image_000' + imageNum + '.jpg');
+    % Load (category, 'image_000' + imageNum + '.jpg');
+    Screen('DrawTexture', w, tex{category}{img} );
+    Screen('Flip', w);
     WaitSecs(imageTime - toc);
     
     % Load mask up from random number between 1:8 and display it here for
     maskNum = rand(1,8);
     folderNum = 1;
     tic;
-    load (folderNum, 'image_000' + maskNum + '.jpg');
+    % load (folderNum, 'image_000' + maskNum + '.jpg');
+    Screen('DrawTexture', w, tex{folderNum}{maskNum});
+    Screen('Flip', w);
+   	% 500(maskTime) ms.
     WaitSecs(maskTime - toc);
-
-    % 500(maskTime) ms.
+    
     % Display Text: "What Image did you see?" 
     Screen('TextSize',win, 35);
     Screen('TextStyle', win, 1);
@@ -390,7 +407,6 @@ Screen('CloseAll');
 
 
 %% Sam's Functions
-
 function fixate(w)
 Screen('TextSize', w, 40);
 DrawFormattedText(w, '+', 'center', 'center', [200 200 200]);
