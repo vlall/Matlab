@@ -322,13 +322,14 @@ Screen('Flip', win);
 
 %% PTB Setup
 Screen('Preference', 'SkipSyncTests', 2);
-[w rect xMid yMid] = startPTB(screenNumber, 1, [128 128 128]);
+[w, rect, xMid, yMid] = startPTB(screenNumber, 1, [128 128 128]);
 HideCursor;
 %% Create Stimuli & Preallocate
+center = xMid-(stimSize/2) yMid-(stimSize/2) xMid+(stimSize/2) yMid+(stimSize/2)
 for set = 1:4
     for img = 1:64
         %Making the cell array
-        tex{set}{img} = Screen('MakeTexture', w, STIMS{set}{img});
+        tex{set}{img} = Screen('MakeTexture', w, STIMS{set}{img},[], [center]);
     end;
 end;
 
@@ -354,7 +355,7 @@ for i = 1:256
     category = design(i,3);
     tic;
     % Load (category, 'image_000' + imageNum + '.jpg');
-    Screen('DrawTexture', w, tex{category}{img} );
+    Screen('DrawTexture', w, tex{category}{img}, [], [center] );
     Screen('Flip', w);
     WaitSecs(imageTime - toc);
     
@@ -363,7 +364,7 @@ for i = 1:256
     folderNum = 1;
     tic;
     % load (folderNum, 'image_000' + maskNum + '.jpg');
-    Screen('DrawTexture', w, tex{folderNum}{maskNum});
+    Screen('DrawTexture', w, tex{folderNum}{maskNum}, [], center);
     Screen('Flip', w);
    	% 500(maskTime) ms.
     WaitSecs(maskTime - toc);
@@ -374,14 +375,19 @@ for i = 1:256
     DrawFormattedText(win, 'Please indicate the image category you saw.', 'center', 'center', 0);
     % Allow response to be triggered by KeyIsDown translating to a scene
     % category in the Design Matrix.
-
-    if keyIsDown == butOne
+    
+    [touch, secs, keyCode] = KbCheck(-1);
+    if touch && ~keyCode(triggerKey)
+        UserAns = find(keyCode);
+        break;
+    end;
+    if UserAns == butOne
         choice = 1;
-    elseif keyIsDown == butTwo
+    elseif UserAns == butTwo
         choice = 2;
-    elseif keyIsDown == butThree
+    elseif UserAns == butThree
         choice = 3;
-    elseif keyIsDown == butFour
+    elseif UserAns == butFour
         choice = 4;
     end;
         
@@ -396,6 +402,7 @@ for i = 1:256
     % Log array to text file, along with answer information.
         save (fprintf('Correct:%d\n Incorrect:%d\n Elapsed Time:%d', correct,incorrect, endTIme));
     end;
+    UserAns = 0 
 end;    
     % Quit
     
