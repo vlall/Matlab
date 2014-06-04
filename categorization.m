@@ -1,7 +1,10 @@
-function [CAT] = newold(sub)
+% TO DO: 
+% 1) COPY AND EDIT MAKESTIMS FILE SO THAT MASKS.MAT IS IMPORTED AS STIM2
+
+function [CAT] = newold(sub,trials)
+if trials>256; trials = 256; end;
 
 CAT.curDir = cd; 
-
 % Categoization script Draft
 global rootDir
 rootDir = pwd;
@@ -60,9 +63,9 @@ incorrect=0;
 % sortrows(foo,4)
 design = [...
    164    36     3     1;
-   141    13     3     2;
+   141    13     2     2;
    110    46     2     3;
-    72     8     2     4;
+    72     8     3     4;
    126    62     2     5;
    197     5     4     6;
    198     6     4     7;
@@ -324,6 +327,7 @@ screenid = max(Screen('Screens'));
 fixTime = 2.0;
 imageTime = .128;
 maskTime = .5;
+startTime=GetSecs
 
 
 res = Screen('Resolution', screenNumber);
@@ -336,6 +340,10 @@ numStimSets = size(STIMS,2);
 imgsPerSet = size(STIMS{1},2);
 numStimSets2 = size(STIMS2,2);
 imgsPerSet2 = size(STIMS2{1},2);
+
+%% Make text file for data
+temp=fopen([sub '-temp.txt'],'wt');
+results=fopen([sub '-results.txt'],'wt');
 
 %% PTB Setup
 Screen('Preference', 'SkipSyncTests', 2);
@@ -358,11 +366,11 @@ for set = 1:numStimSets2
 end;
 
 DrawFormattedText(w, 'Waiting for trigger...', 'center', 'center');
+Screen('Flip', w);
 trigger(triggerKey);
 Screen('Flip', w);
 
-
-for i = 1:256
+for i = 1:trials
     % Fixate for w time
     tic
     fixate(w);
@@ -378,19 +386,21 @@ for i = 1:256
     WaitSecs(imageTime - toc);
     
     % Load mask up from random number between 1:8 and display it here for
-    maskNum = rand(1,8);
+    maskNum = randi([1, 8]);
     folderNum = 1;
     tic;
     % load (folderNum, 'image_000' + maskNum + '.jpg');
-    Screen('DrawTexture', w, tex{folderNum}{maskNum}, [], center);
+    Screen('DrawTexture', w, tex{folderNum}{maskNum}, [], [center] );
     Screen('Flip', w);
    	% 500(maskTime) ms.
     WaitSecs(maskTime - toc);
     
     % Display Text: "What Image did you see?" 
-    Screen('TextSize',win, 35);
-    Screen('TextStyle', win, 1);
-    DrawFormattedText(win, 'Please indicate the image category you saw.', 'center', 'center', 0);
+    Screen('TextSize',w, 35);
+    Screen('TextStyle', w, 1);
+    DrawFormattedText(w, 'Please indicate the image category you saw.\n\n 1 for Beach\n 2 for City\n 9 for Forest\n 0 for Kitchen', 'center', 'center', 0);
+    Screen('Flip', w);
+
     % Allow response to be triggered by KeyIsDown translating to a scene
     % category in the Design Matrix.
     
@@ -410,27 +420,38 @@ for i = 1:256
         choice = 3;
     elseif UserAns == butFour
         choice = 4;
+    else
+        choice = 0;
     end;
         
     if choice == category
-        save (fprintf('Subject ID: %s\n Trial # %s \n Image Number:%s\n Subject Guess:%s\n Image Category:%s\n Answer is Correct!\n', sub, i, imageNum, choice, category))
+        fprintf(temp, 'Subject ID:%d\n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Correct!\n', sub, i, imageNum, choice, category)
         %write to text file "Answer #x is correct
         correct=correct+1;
     else
-        save (fprintf('Subject ID: %s\n Trial # %s \n Image Number:%s\n Subject Guess:%s\n Image Category:%s\n Answer is Incorrect!\n', sub, i, imageNum, choice, category))
+        fprintf(temp, 'Subject ID:%d \n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Incorrect!\n', sub, i, imageNum, choice, category)
         incorrect=incorrect+1;
 
-    % Log array to text file, along with answer information.
-        save (fprintf('Correct:%d\n Incorrect:%d\n Elapsed Time:%d', correct,incorrect, endTIme));
+
     end;
-    UserAns = 0 
+    UserAns = 0; 
+    choice = 0; 
+    
+%% Log array to text file, along with answer information.
+percentCorrect = (correct/(correct+incorrect)) * 100;
+timeNow = GetSecs;
+endTime = timeNow - startTime;
+fprintf(results, 'Correct:%d\n Incorrect:%d\n Elapsed Time:%d \n Percent Correct:%1.3f%% \n', correct,incorrect, endTime,percentCorrect);
+fprintf('Percent Correct:%1.3f%% \n', percentCorrect);
+
 end;    
     % Quit
     
 %% Shutdown Procedures
 ShowCursor;
 Screen('CloseAll');
-
+fclose(temp);
+fclose(results);
 
 
 %% Sam's Functions
@@ -471,7 +492,7 @@ KbName('UnifyKeyNames');
 touch = 0;
 go = 0;
 while go == 0
-    [touch, secs, keyCode] = KbCheck(-1);
+    [touch, secs, keyCode] = KbCheck;
     WaitSecs(.0001);
     if touch && keyCode(triggerKey)
         go = 1;
