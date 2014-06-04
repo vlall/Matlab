@@ -327,7 +327,7 @@ screenid = max(Screen('Screens'));
 fixTime = 2.0;
 imageTime = .128;
 maskTime = .5;
-startTime=GetSecs
+startTime=GetSecs;
 
 
 res = Screen('Resolution', screenNumber);
@@ -425,11 +425,11 @@ for i = 1:trials
     end;
         
     if choice == category
-        fprintf(temp, 'Subject ID:%d\n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Correct!\n', sub, i, imageNum, choice, category)
+        fprintf(temp, 'Subject ID:%d\n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Correct!\n\n', sub, i, imageNum, choice, category)
         %write to text file "Answer #x is correct
         correct=correct+1;
     else
-        fprintf(temp, 'Subject ID:%d \n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Incorrect!\n', sub, i, imageNum, choice, category)
+        fprintf(temp, 'Subject ID:%d \n Trial #: %d \n Image Number:%d\n Subject Guess:%d\n Image Category:%d\n Answer is Incorrect!\n\n', sub, i, imageNum, choice, category)
         incorrect=incorrect+1;
 
 
@@ -441,7 +441,7 @@ for i = 1:trials
 percentCorrect = (correct/(correct+incorrect)) * 100;
 timeNow = GetSecs;
 endTime = timeNow - startTime;
-fprintf(results, 'Correct:%d\n Incorrect:%d\n Elapsed Time:%d \n Percent Correct:%1.3f%% \n', correct,incorrect, endTime,percentCorrect);
+fprintf(results, 'Correct:%d\n Incorrect:%d\n Elapsed Time:%d \n Percent Correct:%1.3f%% \n\n', correct,incorrect, endTime,percentCorrect);
 fprintf('Percent Correct:%1.3f%% \n', percentCorrect);
 
 end;    
